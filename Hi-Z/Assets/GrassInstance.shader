@@ -4,6 +4,7 @@ Shader "HZB/GrassInstance"
     {
         _MainTex ("Texture", 2D) = "white" {}
         _Cutoff("Cutoff", float) = 0.5
+        _GrassSize("Grass Size", Vector) = (2,2,1,0)
     }
     SubShader
     {
@@ -30,16 +31,40 @@ Shader "HZB/GrassInstance"
             sampler2D _MainTex;
             StructuredBuffer<float3> posVisibleBuffer;
             float _Cutoff;
+            float4 _GrassSize;
+
+            float rand(float3 co, float minNum, float maxNum)
+            {
+                return frac(sin(dot(co, float3(12.9898, 78.233, 53.539))) * 43758.5453) * (maxNum - minNum) + minNum;
+            }
+
+            float3 billboard(float3 pos)
+            {
+                float3 center = float3(0, 0, 0);
+				float3 viewer = mul(unity_WorldToObject,float4(_WorldSpaceCameraPos, 1));
+				
+				float3 normalDir = viewer - center;
+				normalDir.y = 0;
+				normalDir = normalize(normalDir);
+
+				float3 upDir = abs(normalDir.y) > 0.999 ? float3(0, 0, 1): float3(0, 1, 0);
+				float3 rightDir = normalize(cross(upDir, normalDir))*-1;
+				upDir = normalize(cross(normalDir, rightDir));
+                
+				float3 centerOffs = pos - center;
+				float3 localPos = center + rightDir * centerOffs.x * _GrassSize.x
+                    - upDir * centerOffs.y * _GrassSize.y
+                    + normalDir * centerOffs.z * _GrassSize.z;
+                return localPos;
+            }
             
             v2f vert (appdata_full v, uint instanceID : SV_InstanceID)
             {
                 v2f o;
                 float3 posWS = posVisibleBuffer[instanceID];
                 
-                float3 camRight = UNITY_MATRIX_IT_MV[0].xyz;
-                float3 camUp = UNITY_MATRIX_IT_MV[1].xyz;
-                posWS += camRight * v.vertex.x + camUp * v.vertex.y;
-
+                float3 loaclPos = billboard(v.vertex.xyz);
+                posWS += loaclPos;
                 o.vertex = mul(UNITY_MATRIX_VP, float4(posWS, 1.0f));
                 o.uv = v.texcoord;
                 return o;
