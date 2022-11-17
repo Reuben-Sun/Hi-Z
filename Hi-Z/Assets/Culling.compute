@@ -1,0 +1,41 @@
+#pragma kernel CSCulling
+
+StructuredBuffer<float3> posAllBuffer;
+RWStructuredBuffer<float3> posVisibleBuffer;
+RWStructuredBuffer<int> argBuffer;
+Texture2D HzbDepth;
+
+float3 cameraPos;
+float3 cameraDir;
+float cameraHalfFov;
+float4x4 matrix_VP;
+int resolution;
+
+[numthreads(16,16,1)]
+void CSCulling (uint3 id : SV_DispatchThreadID)
+{
+    uint index = id.y * resolution + id.x;
+
+    float3 itemPos = posAllBuffer[index];
+    float3 itemDir = normalize(itemPos - cameraPos);
+    //视锥裁剪
+    float4 clipPos = mul(matrix_VP, float4(itemPos - cameraDir * 0.2, 1));  //相机向后移动 0.2
+    if(max(abs(clipPos.x), abs(clipPos.y)) > clipPos.w + 0.7) return;   //视锥外 0.7的可视范围
+
+    clipPos.xyz /= clipPos.w;   //这个值在 [-1,1]可见
+    clipPos.xy = clipPos.xy * 0.5 + 0.5;    //转化为 [0,1]
+
+    //Hi-Z
+    float scWid = 0.2 / (tan(cameraHalfFov * 3.1415926 / 180) * clipPos.w) * resolution;
+    uint mipLevel = (uint)clamp(log2(scWid), 0, 7);
+    uint textureScale = 1 << mipLevel;
+    uint2 uv = uint2(clipPos.xy * (resolution / textureScale));
+    float minDepth = min(min(HzbDepth.mips[mipLevel][uv.xy + uint2(0,0)].r, HzbDepth.mips[mipLevel][uv.xy + uint2(0,1)].r),
+        min(HzbDepth.mips[mipLevel][uv.xy + uint2(1,0)].r, HzbDepth.mips[mipLevel][uv.xy + uint2(1,1)].r));
+    if(minDepth > clipPos.z) return;
+    
+    int currentIndex;
+    InterlockedAdd(argBuffer[1], 1, currentIndex);
+    
+    posVisibleBuffer[currentIndex] = itemPos;
+}

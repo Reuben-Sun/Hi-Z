@@ -28,7 +28,7 @@ public class HzbDepthBuilder : MonoBehaviour
         hzbDepth.filterMode = FilterMode.Point;
         hzbDepth.Create();
         
-        //HzbInstance.HZB_Depth = hzbDepth;
+        HzbInstance.HzbDepth = hzbDepth;
     }
 
     private void OnDestroy()
