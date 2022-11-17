@@ -4,7 +4,7 @@
 
 基于Hi-Z的Grass渲染
 
-![正面](Image/正面.png)
+![正面](Image/正面.gif)
 
 ![侧面](Image/侧面.png)
 
@@ -30,7 +30,9 @@
 
 ### 环境
 
-Unity 2021.3.8f
+- Unity 2021.3.8f
+
+- 注意，本项目使用Git LFS管理
 
 ### 参考
 
