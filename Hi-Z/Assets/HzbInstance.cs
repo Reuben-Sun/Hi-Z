@@ -82,7 +82,7 @@ public class HzbInstance : MonoBehaviour
     private void Update()
     {
         Culling();
-        Graphics.DrawMeshInstancedIndirect(grassMesh, 0, grassMaterial, _bounds, _argBuffer, 0, null, ShadowCastingMode.Off, false);
+        Graphics.DrawMeshInstancedIndirect(grassMesh, 0, grassMaterial, _bounds, _argBuffer, 0, null, ShadowCastingMode.Off, true);
         
     }
 

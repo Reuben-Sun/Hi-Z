@@ -4,7 +4,7 @@
 
 基于Hi-Z的Grass渲染
 
-![正面](Image/正面.gif)
+![正面](Image/正面.png)
 
 ![侧面](Image/侧面.png)
 
